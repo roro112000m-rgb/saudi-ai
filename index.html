@@ -30,37 +30,14 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.5s ease, visibility 0.5s;
         }
-        .message-user { 
-            align-self: flex-start; background: #064e3b; color: #ffffff; 
-            border-radius: 1.5rem; border-top-left-radius: 0.2rem; 
-            padding: 0.8rem 1.2rem; max-width: 80%; margin-bottom: 0.5rem;
-            animation: slideLeft var(--anim-speed) var(--anim-curve) forwards;
-            font-weight: 600; text-align: right;
-        }
-        .message-bot { 
-            align-self: flex-end; background: #000000; color: #ffffff; 
-            border-radius: 1.5rem; border-top-right-radius: 0.2rem; 
-            padding: 0.8rem 1.2rem; max-width: 80%; margin-bottom: 0.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            animation: slideRight var(--anim-speed) var(--anim-curve) forwards;
-            font-weight: 600; text-align: right; overflow: hidden;
-        }
+        .message-user { align-self: flex-start; background: #064e3b; color: #ffffff; border-radius: 1.5rem; border-top-left-radius: 0.2rem; padding: 0.8rem 1.2rem; max-width: 80%; margin-bottom: 0.5rem; font-weight: 600; text-align: right; }
+        .message-bot { align-self: flex-end; background: #000000; color: #ffffff; border-radius: 1.5rem; border-top-right-radius: 0.2rem; padding: 0.8rem 1.2rem; max-width: 80%; margin-bottom: 0.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); font-weight: 600; text-align: right; }
         .dark .message-bot { background: #ffffff; color: #000000; }
-        @keyframes slideLeft { 0% { opacity: 0; transform: translateX(-15px); } 100% { opacity: 1; transform: translateX(0); } }
-        @keyframes slideRight { 0% { opacity: 0; transform: translateX(15px); } 100% { opacity: 1; transform: translateX(0); } }
         .glass { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        .modal-base {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
-            width: 95%; max-width: 450px; background: white; z-index: 1000;
-            border-radius: 28px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            max-height: 85vh; overflow-y: auto; opacity: 0; visibility: hidden; transition: all 0.3s var(--anim-curve);
-        }
+        .modal-base { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 95%; max-width: 450px; background: white; z-index: 1000; border-radius: 28px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; opacity: 0; visibility: hidden; transition: all 0.3s var(--anim-curve); }
         .modal-base.active { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
         .dark .modal-base { background: #111827; color: white; border: 1px solid #1f2937; }
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999;
-            opacity: 0; visibility: hidden; transition: 0.3s;
-        }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; opacity: 0; visibility: hidden; transition: 0.3s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .age-option { border: 2px solid transparent; transition: 0.2s; cursor: pointer; }
         .age-option.selected { border-color: #059669; background: #05966910; }
@@ -73,7 +50,7 @@
     <div id="introScreen">
         <div class="relative z-10 flex flex-col items-center">
             <div class="w-20 h-20 bg-primary rounded-3xl flex items-center justify-center text-white text-4xl font-black shadow-lg">S</div>
-            <div class="mt-4 text-white font-black text-xl tracking-widest uppercase italic">Saudi AI</div>
+            <div class="mt-4 text-white font-black text-xl tracking-widest uppercase italic tracking-wider">Saudi AI</div>
         </div>
     </div>
 
@@ -82,40 +59,170 @@
     <div id="setupModal" class="modal-base">
         <div class="text-center mb-6">
             <h3 class="font-black text-2xl mb-2">إعدادات الرقابة الأبوية 🛡️</h3>
+            <p class="text-sm opacity-70">يرجى اختيار الفئة العمرية المناسبة لتخصيص محتوى الردود.</p>
         </div>
         <div class="grid grid-cols-2 gap-3 mb-6">
-            <div onclick="selectAge(3)" class="age-option p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center" id="age3">
-                <span class="text-2xl block">👶</span><span class="font-black">+3</span>
+            <div onclick="selectAge(3)" class="age-option p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center" id="age3"><span class="text-2xl block">👶</span><span class="font-black">+3</span></div>
+            <div onclick="selectAge(7)" class="age-option p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center" id="age7"><span class="text-2xl block">🧒</span><span class="font-black">+7</span></div>
+            <div onclick="selectAge(13)" class="age-option p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center" id="age13"><span class="text-2xl block">🧑</span><span class="font-black">+13</span></div>
+            <div onclick="selectAge(18)" class="age-option p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center" id="age18"><span class="text-2xl block">🧔</span><span class="font-black">+18</span></div>
+        </div>
+        <div class="space-y-4 mb-6">
+            <h4 class="font-bold text-sm border-b pb-2 dark:border-slate-700">تعديلات العرض 👁️</h4>
+            <div>
+                <label class="text-xs font-bold block mb-1">السطوع</label>
+                <input type="range" min="50" max="150" value="100" class="w-full" oninput="updateVisuals('brightness', this.value)">
             </div>
-            <div onclick="selectAge(7)" class="age-option p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center" id="age7">
-                <span class="text-2xl block">🧒</span><span class="font-black">+7</span>
-            </div>
-            <div onclick="selectAge(13)" class="age-option p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center" id="age13">
-                <span class="text-2xl block">🧑</span><span class="font-black">+13</span>
-            </div>
-            <div onclick="selectAge(18)" class="age-option p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-center" id="age18">
-                <span class="text-2xl block">🧔</span><span class="font-black">+18</span>
+            <div>
+                <label class="text-xs font-bold block mb-1">التباين</label>
+                <input type="range" min="50" max="150" value="100" class="w-full" oninput="updateVisuals('contrast', this.value)">
             </div>
         </div>
-        <button onclick="closeSetup()" id="saveBtn" class="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg opacity-50 cursor-not-allowed" disabled>حفظ الإعدادات</button>
+        <button onclick="closeSetup()" id="saveBtn" class="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg opacity-50 cursor-not-allowed" disabled>حفظ الإعدادات والدخول</button>
+    </div>
+
+    <div id="updatesModal" class="modal-base">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-black text-xl">سجل التطوير 🛠️</h3>
+            <button onclick="toggleModal('updatesModal')" class="bg-slate-100 dark:bg-slate-800 p-2 rounded-full">✕</button>
+        </div>
+        <div class="text-sm space-y-2 font-bold opacity-80 border-r-2 border-primary pr-3 italic">
+            - نسخة V 2.05: إصلاح تعليق شاشة البداية، تحسين استقرار الـ API، ونظام الرقابة.
+        </div>
     </div>
 
     <nav class="glass bg-white/90 dark:bg-black/90 border-b border-slate-200 dark:border-slate-800 fixed w-full z-[100] top-0 h-14 flex items-center px-6">
         <div class="w-full flex justify-between items-center">
             <div class="flex gap-2">
-                <button onclick="clearChat()" class="text-[10px] font-black text-red-500 border border-red-500/20 px-3 py-1 rounded-full">جديد</button>
+                <button onclick="clearChat()" class="text-[10px] font-black text-red-500 uppercase border border-red-500/20 px-3 py-1 rounded-full">جديد</button>
+                <button onclick="toggleModal('updatesModal')" class="text-[10px] font-black text-primary border border-primary/20 px-3 py-1 rounded-full italic">التحديثات ✨</button>
             </div>
-            <span class="font-black text-sm italic">Saudi <span class="text-primary">AI</span></span>
-            <button onclick="toggleModal('setupModal')">⚙️</button>
+            <span class="font-black text-sm italic tracking-tighter">Saudi <span class="text-primary">AI</span> <span class="text-[8px] opacity-50" id="displayAge"></span></span>
+            <button onclick="toggleModal('setupModal')" class="text-lg">⚙️</button>
         </div>
     </nav>
 
-    <main class="h-screen pt-16 pb-44 px-4 max-w-4xl mx-auto flex flex-col">
-        <div id="chatHistory" class="flex-grow overflow-y-auto flex flex-col p-2 space-y-3"></div>
+    <main class="h-screen pt-16 pb-44 px-4 max-w-4xl mx-auto relative z-10 flex flex-col">
+        <div id="chatHistory" class="flex-grow overflow-y-auto flex flex-col p-2 space-y-3 no-scrollbar"></div>
     </main>
 
     <div class="fixed bottom-0 left-0 w-full glass bg-white/90 dark:bg-black/90 border-t p-4 pb-12 z-50">
-        <div class="max-w-4xl mx-auto flex gap-2 items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-full border">
-            <textarea id="aiInput" rows="1" class="flex-grow bg-transparent px-4 py-2 font-bold outline-none dark:text-white resize-none text-sm" placeholder="تفضل بطرح سؤالك..."></textarea>
-            <button onclick="askAI()" class="bg-primary text-white p-2.5 rounded-full shadow-md">
-                <svg class="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round
+        <div class="max-w-4xl mx-auto relative">
+            <div class="flex gap-2 items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
+                <textarea id="aiInput" rows="1" class="flex-grow bg-transparent px-4 py-2 font-bold outline-none dark:text-white resize-none text-sm" placeholder="تفضل بطرح سؤالك يا غالي..."></textarea>
+                <button onclick="askAI()" class="bg-primary text-white p-2.5 rounded-full shadow-md active:scale-90 transition-all">
+                    <svg class="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyBVH5hcfq9-JWizC_L5fXueSQ3eNwt9Ge0"; 
+        let userAge = localStorage.getItem('saudi_ai_age') || null;
+        let brightness = 100;
+        let contrast = 100;
+
+        // إخفاء إجباري للشاشة السوداء مهما حدث
+        function forceHideIntro() {
+            const intro = document.getElementById('introScreen');
+            if(intro) {
+                intro.style.opacity = '0';
+                setTimeout(() => {
+                    intro.style.visibility = 'hidden';
+                    if (!userAge) toggleModal('setupModal');
+                }, 500);
+            }
+        }
+
+        window.onload = () => {
+            loadSavedChat();
+            applyVisuals();
+            if (userAge) updateAgeDisplay();
+            // هذا التوقيت يضمن إن الشاشة تختفي بعد ثانية واحدة حتى لو فيه خطأ بالكود
+            setTimeout(forceHideIntro, 1000);
+        };
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            const overlay = document.getElementById('modalOverlay');
+            modal.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function selectAge(age) {
+            userAge = age;
+            document.querySelectorAll('.age-option').forEach(opt => opt.classList.remove('selected'));
+            document.getElementById(`age${age}`).classList.add('selected');
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function closeSetup() {
+            localStorage.setItem('saudi_ai_age', userAge);
+            updateAgeDisplay();
+            toggleModal('setupModal');
+            if (document.getElementById('chatHistory').children.length === 0) {
+                addMessage('bot', `أهلاً بك! تم ضبط المحتوى ليكون مناسباً لعمر ${userAge}+.`);
+            }
+        }
+
+        function updateAgeDisplay() { document.getElementById('displayAge').innerText = `+${userAge}`; }
+
+        function updateVisuals(type, val) {
+            if (type === 'brightness') brightness = val;
+            if (type === 'contrast') contrast = val;
+            applyVisuals();
+        }
+
+        function applyVisuals() { document.body.style.filter = `brightness(${brightness}%) contrast(${contrast}%)`; }
+
+        async function askAI() {
+            const input = document.getElementById('aiInput');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            addMessage('user', prompt);
+            input.value = "";
+            const botMsg = addMessage('bot', '<span class="analyzing-text">جاري صياغة الرد...</span>');
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        contents: [{ parts: [{ text: `أجب بلهجة سعودية مهذبة لفئة عمرية ${userAge}+. السؤال: ${prompt}` }] }]
+                    })
+                });
+                const data = await res.json();
+                botMsg.innerHTML = data.candidates?.[0]?.content?.parts?.[0]?.text || "أعتذر، حدث خطأ في الرد.";
+            } catch (err) { botMsg.innerHTML = "حدث خطأ في الاتصال، حاول لاحقاً."; }
+            saveChat();
+        }
+
+        function addMessage(role, text) {
+            const container = document.getElementById('chatHistory');
+            const div = document.createElement('div');
+            div.className = `message-${role}`;
+            div.innerHTML = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            return div;
+        }
+
+        function saveChat() { localStorage.setItem('saudi_ai_chat', document.getElementById('chatHistory').innerHTML); }
+        function loadSavedChat() {
+            const saved = localStorage.getItem('saudi_ai_chat');
+            if (saved) document.getElementById('chatHistory').innerHTML = saved;
+        }
+
+        function clearChat() {
+            if(confirm("هل تريد مسح المحادثة؟")) {
+                document.getElementById('chatHistory').innerHTML = "";
+                localStorage.removeItem('saudi_ai_chat');
+            }
+        }
+    </script>
+</body>
+</html>
