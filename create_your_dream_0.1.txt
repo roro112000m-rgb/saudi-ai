@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Dream - اصنع أحلامك</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&display=swap');
+        
+        :root {
+            --bg-color: #0a0a0a;
+            --card-bg: #141414;
+            --text-color: #e0e0e0;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .gradient-bg {
+            background: radial-gradient(circle at top right, #3b82f644, var(--bg-color) 70%);
+        }
+
+        .sidebar {
+            width: 320px;
+            background-color: var(--card-bg);
+            border-left: 1px solid var(--border-color);
+        }
+
+        .canvas-container {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+
+        .office-editor {
+            background: white;
+            color: black;
+            min-height: 80vh;
+            width: 100%;
+            max-width: 800px;
+            padding: 60px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            outline: none;
+            border-radius: 8px;
+        }
+
+        .tool-btn {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .tool-btn.active { background: #3b82f6; color: white; }
+
+        /* Context Menu */
+        #context-menu {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            background: #1f1f1f;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 5px 0;
+            min-width: 150px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        #context-menu div {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #context-menu div:hover { background: #3b82f6; color: white; }
+
+        /* Sticker Editor */
+        #sticker-editor-modal { background: rgba(0,0,0,0.95); }
+        .sticker-preview-box {
+            font-size: 120px;
+            padding: 40px;
+            background: #222;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        /* Footer Credits */
+        .app-footer {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 24px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 40;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <!-- Context Menu -->
+    <div id="context-menu">
+        <div onclick="menuAction('delete')"><i class="fas fa-trash"></i> حذف</div>
+        <div onclick="menuAction('copy')"><i class="fas fa-copy"></i> نسخ</div>
+        <div onclick="menuAction('edit')"><i class="fas fa-magic"></i> تعديل الألوان</div>
+    </div>
+
+    <!-- Sticker Editor Modal -->
+    <div id="sticker-editor-modal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--card-bg)] p-10 rounded-[2.5rem] w-full max-w-lg border border-[var(--border-color)] text-center">
+            <h2 class="text-2xl font-bold mb-6">تعديل الملصق الخاص بك</h2>
+            <div id="sticker-target-preview" class="sticker-preview-box"></div>
+            
+            <div class="space-y-4 mb-8 text-right">
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2">درجة اللون (Hue)</label>
+                    <input type="range" id="hue-rotate" min="0" max="360" value="0" class="w-full accent-blue-500" oninput="applyStickerFilters()">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2">التشبع (Saturation)</label>
+                    <input type="range" id="saturate" min="0" max="300" value="100" class="w-full accent-blue-500" oninput="applyStickerFilters()">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2">السطوع (Brightness)</label>
+                    <input type="range" id="brightness" min="50" max="200" value="100" class="w-full accent-blue-500" oninput="applyStickerFilters()">
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="saveCustomSticker()" class="flex-1 bg-blue-600 py-3 rounded-xl font-bold">حفظ في قسم (أنت)</button>
+                <button onclick="closeStickerEditor()" class="flex-1 bg-gray-700 py-3 rounded-xl font-bold">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة البداية -->
+    <div id="start-screen" class="fixed inset-0 z-[100] gradient-bg flex flex-col items-center justify-center overflow-y-auto py-12 px-6 text-center">
+        <h1 class="text-6xl font-extrabold mb-3 tracking-tight">Create Your Dream</h1>
+        <h2 class="text-3xl text-blue-500 font-light mb-16">اصنع أحلامك</h2>
+        
+        <div class="flex flex-wrap justify-center gap-8 mb-20">
+            <div onclick="openCreateModal()" class="bg-white/5 p-10 rounded-[2.5rem] w-72 cursor-pointer text-center border border-blue-500/30 hover:bg-blue-600/10 transition-all hover:scale-105 group">
+                <i class="fas fa-plus-circle text-5xl text-blue-500 mb-6 group-hover:rotate-90 transition-transform duration-500"></i>
+                <h3 class="text-2xl font-bold">بدء مشروع جديد</h3>
+                <p class="text-sm opacity-60 mt-2">رسومات أو مستندات</p>
+            </div>
+        </div>
+
+        <!-- معلومات التواصل - شاشة البداية -->
+        <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 px-4 mb-8">
+            <div class="bg-white/5 p-4 rounded-2xl flex items-center gap-4 border border-white/5">
+                <i class="fab fa-tiktok text-pink-500 text-xl"></i>
+                <span class="text-sm">raed__x</span>
+            </div>
+            <div class="bg-white/5 p-4 rounded-2xl flex items-center gap-4 border border-white/5">
+                <i class="fas fa-envelope text-yellow-500 text-xl"></i>
+                <span class="text-sm">roro112000@gmail.com</span>
+            </div>
+            <div class="bg-white/5 p-4 rounded-2xl flex items-center gap-4 border border-white/5">
+                <i class="fas fa-phone text-green-500 text-xl"></i>
+                <span class="text-sm">540453262</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إنشاء مشروع -->
+    <div id="create-modal" class="fixed inset-0 z-[110] bg-black/90 backdrop-blur hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--card-bg)] p-10 rounded-[3rem] w-full max-w-2xl border border-[var(--border-color)] text-center">
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="text-3xl font-bold text-blue-500">اختر نوع العمل</h2>
+                <button onclick="closeCreateModal()" class="text-gray-500 hover:text-white"><i class="fas fa-times-circle text-3xl"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-6">
+                <div onclick="startProject('image')" class="bg-blue-600/10 p-12 rounded-3xl cursor-pointer border border-blue-500/30 hover:bg-blue-600/20">
+                    <i class="fas fa-palette text-5xl mb-4 text-blue-400"></i>
+                    <h4 class="font-bold text-2xl">لوحة رسم</h4>
+                </div>
+                <div onclick="startProject('doc')" class="bg-green-600/10 p-12 rounded-3xl cursor-pointer border border-green-500/30 hover:bg-green-600/20">
+                    <i class="fas fa-file-alt text-5xl mb-4 text-green-400"></i>
+                    <h4 class="font-bold text-2xl">مستندات</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- المحرر الرئيسي -->
+    <div id="main-app" class="hidden flex flex-col h-full">
+        <header class="bg-[var(--card-bg)] border-b border-[var(--border-color)] px-8 py-4 flex justify-between items-center z-10">
+            <div class="flex items-center gap-6">
+                <button onclick="goBack()" class="text-gray-400 hover:text-white"><i class="fas fa-chevron-right text-2xl"></i></button>
+                <span class="font-bold text-xl">Create Your Dream</span>
+            </div>
+            <button onclick="saveToDevice()" class="bg-blue-600 px-8 py-2.5 rounded-full font-bold">حفظ في الجهاز <i class="fas fa-download ml-2"></i></button>
+        </header>
+
+        <main class="flex flex-1 overflow-hidden">
+            <aside class="sidebar p-6 flex flex-col gap-4 overflow-y-auto">
+                <!-- أدوات الرسم -->
+                <div id="image-tools">
+                    <h3 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest">أدوات الرسم</h3>
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <button onclick="setTool('brush')" id="btn-brush" class="tool-btn active"><i class="fas fa-paint-brush"></i>فرشاة</button>
+                        <button onclick="setTool('eraser')" id="btn-eraser" class="tool-btn"><i class="fas fa-eraser"></i>مساحة</button>
+                        <button onclick="setTool('move')" id="btn-move" class="tool-btn"><i class="fas fa-mouse-pointer"></i>تحديد</button>
+                    </div>
+                    
+                    <h3 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest">الملصقات</h3>
+                    <div id="sticker-library">
+                        <div class="text-[10px] text-blue-400 mb-2 font-bold">أنت (You)</div>
+                        <div id="custom-stickers-container" class="grid grid-cols-4 gap-2 mb-4">
+                            <div class="p-2 bg-gray-800/20 border border-dashed border-gray-700 rounded-lg text-center text-[8px] opacity-40">فارغ</div>
+                        </div>
+
+                        <div class="text-[10px] text-gray-500 mb-2 font-bold uppercase">المكتبة</div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="addSticker('☁️')" class="p-2 bg-gray-800 rounded-lg hover:scale-110 transition-transform">☁️</button>
+                            <button onclick="addSticker('🌿')" class="p-2 bg-gray-800 rounded-lg hover:scale-110 transition-transform">🌿</button>
+                            <button onclick="addSticker('✨')" class="p-2 bg-gray-800 rounded-lg hover:scale-110 transition-transform">✨</button>
+                            <button onclick="addSticker('💖')" class="p-2 bg-gray-800 rounded-lg hover:scale-110 transition-transform">💖</button>
+                            <button onclick="addSticker('🦋')" class="p-2 bg-gray-800 rounded-lg hover:scale-110 transition-transform">🦋</button>
+                            <button onclick="addSticker('🍓')" class="p-2 bg-gray-800 rounded-lg hover:scale-110 transition-transform">🍓</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أدوات المستندات -->
+                <div id="doc-tools" class="hidden">
+                    <h3 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest">أدوات النص</h3>
+                    <div class="flex flex-col gap-2">
+                        <button onclick="insertTable()" class="tool-btn"><i class="fas fa-table"></i> إدراج جدول</button>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="flex-1 canvas-container flex flex-col items-center justify-center relative overflow-hidden">
+                <div id="canvas-wrapper" class="relative bg-white shadow-2xl" style="width: 800px; height: 600px;">
+                    <div id="elements-layer" class="absolute inset-0 z-10 pointer-events-none"></div>
+                    <canvas id="drawingLayer" width="800" height="600" class="absolute inset-0 z-20"></canvas>
+                </div>
+                <div id="office-container" class="hidden w-full h-full flex justify-center p-8 overflow-y-auto">
+                    <div id="textEditor" contenteditable="true" class="office-editor"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- الحقوق في أسفل المحرر -->
+        <footer class="app-footer">
+            <div class="flex gap-4 items-center">
+                <span class="opacity-50">برمجة وتطوير:</span>
+                <span class="font-bold flex items-center gap-1"><i class="fab fa-tiktok text-pink-500"></i> raed__x</span>
+                <span class="opacity-20">|</span>
+                <span class="font-bold flex items-center gap-1"><i class="fas fa-phone text-green-500"></i> 540453262</span>
+                <span class="opacity-20">|</span>
+                <span class="font-bold flex items-center gap-1"><i class="fas fa-envelope text-yellow-500"></i> roro112000@gmail.com</span>
+            </div>
+            <div class="opacity-40 italic">Create Your Dream &copy; 2026</div>
+        </footer>
+    </div>
+
+    <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-3 rounded-full opacity-0 transition-all z-[200]"></div>
+
+    <script>
+        const canvas = document.getElementById('drawingLayer');
+        const ctx = canvas.getContext('2d');
+        const elementsLayer = document.getElementById('elements-layer');
+        const contextMenu = document.getElementById('context-menu');
+        let currentTool = 'brush';
+        let isDrawing = false;
+        let activeType = 'image';
+        let selectedElement = null;
+        let customStickers = [];
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.style.opacity = '1';
+            setTimeout(() => t.style.opacity = '0', 3000);
+        }
+
+        function openCreateModal() { document.getElementById('create-modal').classList.remove('hidden'); }
+        function closeCreateModal() { document.getElementById('create-modal').classList.add('hidden'); }
+
+        function startProject(type) {
+            activeType = type;
+            closeCreateModal();
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            if (type === 'image') {
+                document.getElementById('canvas-wrapper').classList.remove('hidden');
+                document.getElementById('office-container').classList.add('hidden');
+                document.getElementById('image-tools').classList.remove('hidden');
+                document.getElementById('doc-tools').classList.add('hidden');
+            } else {
+                document.getElementById('canvas-wrapper').classList.add('hidden');
+                document.getElementById('office-container').classList.remove('hidden');
+                document.getElementById('image-tools').classList.add('hidden');
+                document.getElementById('doc-tools').classList.remove('hidden');
+            }
+        }
+
+        function goBack() {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${tool}`)?.classList.add('active');
+            
+            if (tool === 'move') {
+                canvas.style.pointerEvents = 'none';
+                elementsLayer.style.pointerEvents = 'auto';
+            } else {
+                canvas.style.pointerEvents = 'auto';
+                elementsLayer.style.pointerEvents = 'none';
+            }
+        }
+
+        // --- المصلصقات والكليك يمين ---
+        function addSticker(content, isCustom = false, filter = '') {
+            if (activeType === 'doc') return;
+            const div = document.createElement('div');
+            div.className = 'absolute cursor-move select-none text-5xl z-30 pointer-events-auto sticker-item';
+            div.style.left = '100px';
+            div.style.top = '100px';
+            div.style.filter = filter;
+            div.innerHTML = content;
+            
+            div.onmousedown = (e) => { if (e.button === 0) dragElement(e, div); };
+            div.oncontextmenu = (e) => {
+                e.preventDefault();
+                selectedElement = div;
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = e.pageX + 'px';
+                contextMenu.style.top = e.pageY + 'px';
+            };
+            elementsLayer.appendChild(div);
+        }
+
+        window.addEventListener('click', () => { contextMenu.style.display = 'none'; });
+
+        function menuAction(action) {
+            if (!selectedElement) return;
+            if (action === 'delete') {
+                selectedElement.remove();
+                showToast('تم الحذف');
+            } else if (action === 'copy') {
+                const clone = selectedElement.cloneNode(true);
+                clone.style.top = (parseInt(selectedElement.style.top) + 20) + 'px';
+                clone.style.left = (parseInt(selectedElement.style.left) + 20) + 'px';
+                clone.onmousedown = (e) => dragElement(e, clone);
+                clone.oncontextmenu = selectedElement.oncontextmenu;
+                elementsLayer.appendChild(clone);
+                showToast('تم النسخ');
+            } else if (action === 'edit') {
+                openStickerEditor(selectedElement);
+            }
+            contextMenu.style.display = 'none';
+        }
+
+        // --- تعديل الملصقات ---
+        function openStickerEditor(el) {
+            const modal = document.getElementById('sticker-editor-modal');
+            const preview = document.getElementById('sticker-target-preview');
+            preview.innerHTML = el.innerHTML;
+            preview.style.filter = el.style.filter;
+            modal.classList.remove('hidden');
+        }
+
+        function closeStickerEditor() { document.getElementById('sticker-editor-modal').classList.add('hidden'); }
+
+        function applyStickerFilters() {
+            const hue = document.getElementById('hue-rotate').value;
+            const saturate = document.getElementById('saturate').value;
+            const brightness = document.getElementById('brightness').value;
+            const preview = document.getElementById('sticker-target-preview');
+            preview.style.filter = `hue-rotate(${hue}deg) saturate(${saturate}%) brightness(${brightness}%)`;
+        }
+
+        function saveCustomSticker() {
+            const preview = document.getElementById('sticker-target-preview');
+            const stickerData = { content: preview.innerHTML, filter: preview.style.filter };
+            customStickers.push(stickerData);
+            updateCustomStickersUI();
+            closeStickerEditor();
+            showToast('حُفظ في قسم "أنت"');
+        }
+
+        function updateCustomStickersUI() {
+            const container = document.getElementById('custom-stickers-container');
+            container.innerHTML = '';
+            customStickers.forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = 'p-2 bg-gray-800 rounded-lg text-2xl';
+                btn.style.filter = s.filter;
+                btn.innerHTML = s.content;
+                btn.onclick = () => addSticker(s.content, true, s.filter);
+                container.appendChild(btn);
+            });
+        }
+
+        // --- الرسم ---
+        canvas.addEventListener('mousedown', (e) => {
+            if (currentTool === 'move') return;
+            isDrawing = true;
+            ctx.beginPath();
+            const rect = canvas.getBoundingClientRect();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            
+            if (currentTool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = 20;
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = '#3b82f6';
+            }
+            
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+        });
+
+        window.addEventListener('mouseup', () => isDrawing = false);
+
+        function dragElement(e, el) {
+            if (currentTool !== 'move') return;
+            let p3 = e.clientX, p4 = e.clientY;
+            document.onmousemove = (ev) => {
+                let p1 = p3 - ev.clientX; let p2 = p4 - ev.clientY;
+                p3 = ev.clientX; p4 = ev.clientY;
+                el.style.top = (el.offsetTop - p2) + "px";
+                el.style.left = (el.offsetLeft - p1) + "px";
+            };
+            document.onmouseup = () => { document.onmousemove = null; };
+        }
+
+        function insertTable() {
+            const table = `<table border="1" style="width:100%; border-collapse:collapse; margin:10px 0;"><tr><td>خلية 1</td><td>خلية 2</td></tr><tr><td>خلية 3</td><td>خلية 4</td></tr></table><p><br></p>`;
+            document.execCommand('insertHTML', false, table);
+        }
+
+        function saveToDevice() {
+            const link = document.createElement('a');
+            if (activeType === 'image') {
+                link.download = 'dream-design.png';
+                link.href = canvas.toDataURL();
+            } else {
+                const blob = new Blob([document.getElementById('textEditor').innerHTML], {type: 'text/html'});
+                link.download = 'dream-doc.html';
+                link.href = URL.createObjectURL(blob);
+            }
+            link.click();
+            showToast('تم الحفظ بنجاح!');
+        }
+    </script>
+</body>
+</html>
