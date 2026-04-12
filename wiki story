@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ويكي ستوري - الموسوعة التاريخية الكبرى</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Kufi Arabic', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .wiki-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: #ffffff;
+            height: calc(100vh - 64px);
+            position: sticky;
+            top: 64px;
+            border-left: 1px solid #d1d5db;
+            overflow-y: auto;
+        }
+
+        .main-card {
+            background: white;
+            border: 1px solid #a2a9b1;
+            border-radius: 2px;
+        }
+
+        .infobox {
+            width: 300px;
+            float: left;
+            margin-right: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #a2a9b1;
+            background: #f8f9fa;
+            padding: 8px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .infobox th {
+            background: #eaecf0;
+            text-align: right;
+            padding: 5px;
+            border: 1px solid #a2a9b1;
+        }
+
+        .infobox td {
+            padding: 5px;
+            border: 1px solid #a2a9b1;
+        }
+
+        .category-group {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .category-header {
+            width: 100%;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9fafb;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .category-header:hover {
+            background: #f3f4f6;
+        }
+
+        .category-content {
+            display: none;
+            padding: 8px 0;
+            background: #ffffff;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .category-content.active {
+            display: block;
+        }
+
+        .story-item {
+            padding: 6px 24px;
+            display: block;
+            font-size: 0.85rem;
+            color: #2563eb;
+            cursor: pointer;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+
+        .story-item:hover {
+            background: #eff6ff;
+            text-decoration: underline;
+        }
+
+        .section-header {
+            border-bottom: 1px solid #a2a9b1;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.7rem;
+            color: #000;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            border: 1px solid #a2a9b1;
+            padding: 15px;
+            margin: 20px 0;
+            display: inline-block;
+            min-width: 300px;
+        }
+
+        .editor-textarea {
+            min-height: 700px;
+            font-family: monospace;
+            line-height: 1.6;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-slate-900">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-white border-b border-gray-300 h-16 flex items-center px-6 shadow-sm">
+        <div class="flex items-center gap-4 w-full">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showArticle('الصفحة_الرئيسية')">
+                <div class="w-10 h-10 bg-emerald-700 text-white flex items-center justify-center font-bold text-2xl rounded">W</div>
+                <span class="text-xl font-bold">ويكي<span class="text-emerald-700">ستوري</span></span>
+            </div>
+            
+            <div class="flex-grow max-w-xl mx-auto">
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="ابحث عن النبي، الصحابة، هتلر أو أي قصة..." 
+                           class="w-full bg-gray-100 border border-gray-300 rounded py-1.5 px-10 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm">
+                </div>
+            </div>
+
+            <div class="hidden md:flex gap-4 text-sm font-bold">
+                <span id="total-stories-count" class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">جارِ الحساب...</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="wiki-container flex">
+        <!-- Sidebar -->
+        <aside class="sidebar hidden lg:block">
+            <div class="p-4 border-b bg-gray-50">
+                <h3 class="font-bold text-gray-700">تصنيفات الموسوعة الشاملة</h3>
+            </div>
+            <div id="accordion-container"></div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-grow p-4 lg:p-10">
+            <div class="flex justify-between items-end border-b-2 border-gray-300 pb-2 mb-6">
+                <div>
+                    <h1 id="article-title" class="text-4xl font-serif font-medium"></h1>
+                    <p class="text-gray-500 text-sm mt-1 italic">الموسوعة الحرة - أرشيف الألف قصة</p>
+                </div>
+                <div class="flex gap-1 text-sm">
+                    <button onclick="setView('read')" id="btn-read" class="px-4 py-1 border border-gray-300 bg-white font-bold">قراءة</button>
+                    <button onclick="setView('edit')" id="btn-edit" class="px-4 py-1 border border-transparent hover:bg-gray-200">تعديل</button>
+                </div>
+            </div>
+
+            <div id="article-view" class="main-card p-6 lg:p-12 min-h-screen">
+                <div id="article-body" class="prose prose-slate max-w-none text-lg text-gray-800 leading-relaxed"></div>
+            </div>
+
+            <div id="edit-view" class="hidden main-card p-6">
+                <textarea id="article-editor" class="w-full editor-textarea p-6 border border-gray-400 rounded outline-none shadow-inner"></textarea>
+                <div class="mt-4 flex gap-3">
+                    <button onclick="saveArticle()" class="bg-emerald-700 text-white px-8 py-2 font-bold hover:bg-emerald-800">حفظ</button>
+                    <button onclick="setView('read')" class="bg-gray-200 px-6 py-2">إلغاء</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentArticle = "الصفحة_الرئيسية";
+
+        // توليد بيانات ضخمة (محاكاة لـ 1000 قصة)
+        const categories = [
+            {
+                name: "السيرة النبوية المطهرة",
+                icon: "🕌",
+                topics: [
+                    { id: "مولد_النبي", title: "مولد النبي ونشأته" },
+                    { id: "نزول_الوحي", title: "نزول الوحي وغار حراء" },
+                    { id: "الهجرة_النبوية", title: "الهجرة إلى المدينة المنورة" },
+                    { id: "غزوة_بدر", title: "غزوة بدر الكبرى" },
+                    { id: "فتح_مكة", title: "فتح مكة المكرمة" },
+                    { id: "حجة_الوداع", title: "حجة الوداع ووفاة النبي" }
+                ]
+            },
+            {
+                name: "قصص الصحابة الكرام",
+                icon: "⭐",
+                topics: [
+                    { id: "أبو_بكر_الصديق", title: "أبو بكر الصديق (خليفة المسلمين)" },
+                    { id: "عمر_بن_الخطاب", title: "عمر بن الخطاب (الفاروق)" },
+                    { id: "عثمان_بن_عفان", title: "عثمان بن عفان (ذو النورين)" },
+                    { id: "علي_بن_أبي_طالب", title: "علي بن أبي طالب (باب العلم)" },
+                    { id: "خالد_بن_الوليد", title: "خالد بن الوليد (سيف الله المسلول)" },
+                    { id: "حمزة_بن_عبدالمطلب", title: "حمزة بن عبدالمطلب (أسد الله)" },
+                    { id: "أبو_عبيدة_عامر_بن_الجراح", title: "أمين الأمة" },
+                    { id: "عبدالرحمن_بن_عوف", title: "أغنى الصحابة" }
+                ]
+            },
+            {
+                name: "التاريخ الحديث والمعاصر",
+                icon: "🌍",
+                topics: [
+                    { id: "أدولف_هتلر", title: "أدولف هتلر: الصعود والسقوط" },
+                    { id: "الحرب_العالمية_الثانية", title: "أهوال الحرب العالمية الثانية" },
+                    { id: "نابليون_بونابرت", title: "إمبراطورية نابليون" },
+                    { id: "تشرشل", title: "وينستون تشرشل" },
+                    { id: "حرب_أكتوبر", title: "نصر أكتوبر 1973" }
+                ]
+            },
+            {
+                name: "حضارات العالم القديم",
+                icon: "🏛️",
+                topics: Array.from({length: 15}, (_, i) => ({ id: `حضارة_${i}`, title: `قصة الحضارة القديمة رقم ${i+1}` }))
+            },
+            {
+                name: "قصص الأنبياء",
+                icon: "📖",
+                topics: [
+                    { id: "قصة_آدم", title: "بداية الخلق: قصة آدم" },
+                    { id: "قصة_نوح", title: "الطوفان العظيم: قصة نوح" },
+                    { id: "قصة_إبراهيم", title: "أبو الأنبياء: إبراهيم عليه السلام" },
+                    { id: "قصة_موسى", title: "كليم الله: قصة موسى وفرعون" },
+                    { id: "قصة_عيسى", title: "المسيح عيسى بن مريم" }
+                ]
+            },
+            {
+                name: "قصص خيالية وأساطير",
+                icon: "🐉",
+                topics: Array.from({length: 30}, (_, i) => ({ id: `أسطورة_${i}`, title: `أسطورة عالمية رقم ${i+1}` }))
+            },
+            {
+                name: "أرشيف الألف قصة (متنوع)",
+                icon: "📚",
+                topics: Array.from({length: 900}, (_, i) => ({ id: `قصة_عامة_${i}`, title: `قصة رقم ${i+1} من الأرشيف العام` }))
+            }
+        ];
+
+        const wikiData = {
+            "الصفحة_الرئيسية": {
+                title: "ويكي ستوري: موسوعة الألف قصة",
+                content: `
+                    <div class="bg-emerald-900 text-white p-10 rounded-lg mb-8 shadow-xl">
+                        <h2 class="text-4xl font-bold mb-4">مرحباً بك في أكبر مستودع للقصص</h2>
+                        <p class="text-xl opacity-90">نحن نوثق التاريخ، السيرة، والعلوم. تصفح الآن أكثر من 1,000 قصة مفصلة عبر القائمة الجانبية.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-6 border bg-white shadow-sm">
+                            <h3 class="font-bold text-xl border-b pb-2 mb-3">✨ السيرة النبوية</h3>
+                            <p class="text-sm">تعرف على تفاصيل حياة خير البرية من المولد حتى الوفاة بأسلوب تاريخي دقيق.</p>
+                            <button onclick="showArticle('مولد_النبي')" class="text-emerald-700 mt-3 font-bold">ابدأ القراءة ←</button>
+                        </div>
+                        <div class="p-6 border bg-white shadow-sm">
+                            <h3 class="font-bold text-xl border-b pb-2 mb-3">⚔️ هتلر والحرب</h3>
+                            <p class="text-sm">تحليل شامل لشخصية أدولف هتلر وكيف غير وجه العالم في الحرب العالمية الثانية.</p>
+                            <button onclick="showArticle('أدولف_هتلر')" class="text-emerald-700 mt-3 font-bold">اقرأ التفاصيل ←</button>
+                        </div>
+                        <div class="p-6 border bg-white shadow-sm">
+                            <h3 class="font-bold text-xl border-b pb-2 mb-3">👤 قصص الصحابة</h3>
+                            <p class="text-sm">بطولات ومواقف الصحابة الكرام التي غيرت مجرى التاريخ البشري.</p>
+                            <button onclick="showArticle('عمر_بن_الخطاب')" class="text-emerald-700 mt-3 font-bold">اكتشف العظمة ←</button>
+                        </div>
+                    </div>
+                `
+            },
+            "أدولف_هتلر": {
+                title: "أدولف هتلر: من فنان فاشل إلى ديكتاتور العالم",
+                content: `
+                    <div class="infobox">
+                        <table>
+                            <tr><th colspan="2">أدولف هتلر</th></tr>
+                            <tr><th>الميلاد</th><td>1889 (النمسا)</td></tr>
+                            <tr><th>الوفاة</th><td>1945 (برلين)</td></tr>
+                            <tr><th>المنصب</th><td>فهرر ألمانيا النازية</td></tr>
+                            <tr><th>الحزب</th><td>العمال القومي الاشتراكي</td></tr>
+                        </table>
+                    </div>
+                    <p><b>أدولف هتلر</b> هو سياسي ألماني نازي، ولد في النمسا، وكان زعيم حزب العمال الألماني الاشتراكي الوطني. تولى منصب مستشار الدولة في عام 1933، ثم الفهرر في عام 1934.</p>
+                    
+                    <h2 class="section-header">بداياته وصعوده</h2>
+                    <p>بدأ هتلر حياته كرسام فاشل في فيينا، ثم انضم للجيش الألماني في الحرب العالمية الأولى. بعد الهزيمة، استغل حالة الإحباط الاقتصادي في ألمانيا ليبني قاعدة جماهيرية ضخمة معتمداً على خطاباته القومية المتطرفة.</p>
+
+                    <h2 class="section-header">الحرب العالمية الثانية</h2>
+                    <p>في عام 1939، أمر هتلر بغزو بولندا، مما فجر الحرب العالمية الثانية. وتحت قيادته، احتلت ألمانيا معظم أوروبا وأجزاء من أفريقيا، لكن طموحه في غزو الاتحاد السوفيتي كان بداية النهاية.</p>
+                `
+            },
+            "عمر_بن_الخطاب": {
+                title: "عمر بن الخطاب: الفاروق العادل",
+                content: `
+                    <div class="infobox">
+                        <table>
+                            <tr><th colspan="2">عمر بن الخطاب</th></tr>
+                            <tr><th>اللقب</th><td>الفاروق، أمير المؤمنين</td></tr>
+                            <tr><th>فترة الخلافة</th><td>13 هـ - 23 هـ</td></tr>
+                            <tr><th>أهم الإنجازات</th><td>فتح القدس، التقويم الهجري</td></tr>
+                        </table>
+                    </div>
+                    <p>هو <b>عمر بن الخطاب بن نفيل القرشي</b>، ثاني الخلفاء الراشدين وأحد العشرة المبشرين بالجنة. يضرب به المثل في العدل والقوة في الحق.</p>
+                    <h2 class="section-header">عدله وقصصه</h2>
+                    <p>من أشهر قصصه ذهابه إلى القدس لاستلام مفاتيحها ماشياً وهو يقود دابته وخادمه يركب عليها (بسبب القرعة)، مما أذهل بطاركة القدس في ذلك الوقت.</p>
+                `
+            }
+        };
+
+        function buildSidebar() {
+            const container = document.getElementById('accordion-container');
+            container.innerHTML = '';
+            let totalCount = 0;
+
+            categories.forEach(cat => {
+                const group = document.createElement('div');
+                group.className = 'category-group';
+                totalCount += cat.topics.length;
+                
+                group.innerHTML = `
+                    <div class="category-header" onclick="toggleAccordion(this)">
+                        <span>${cat.icon} ${cat.name}</span>
+                        <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">${cat.topics.length}</span>
+                    </div>
+                    <div class="category-content">
+                        ${cat.topics.map(topic => `
+                            <a class="story-item" onclick="showArticle('${topic.id}')">${topic.title}</a>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(group);
+            });
+            document.getElementById('total-stories-count').innerText = `إجمالي القصص: ${totalCount}`;
+        }
+
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            const isActive = content.classList.contains('active');
+            document.querySelectorAll('.category-content').forEach(c => c.classList.remove('active'));
+            if (!isActive) content.classList.add('active');
+        }
+
+        function generateSmartContent(id) {
+            const name = id.replace(/_/g, ' ');
+            return `
+                <div class="bg-gray-50 border p-4 mb-6 text-sm italic">ملاحظة: هذه المقالة قيد المراجعة التاريخية المكثفة.</div>
+                <p><b>${name}</b> هو موضوع محوري في موسوعتنا. نورد هنا التفاصيل الكاملة لهذه القصة بناءً على المصادر الموثقة.</p>
+                <h2 class="section-header">السياق التاريخي</h2>
+                <p>وقعت هذه الأحداث في فترة زمنية تميزت بالتحولات الكبرى. وتعتبر قصة ${name} نموذجاً للدراسة في هذا المجال.</p>
+                <h2 class="section-header">تفاصيل القصة</h2>
+                <p>تبدأ التفاصيل مع ظهور الشخصيات الرئيسية وتفاعلها مع المحيط. (هنا يتم سرد الأحداث بشكل تسلسلي تاريخي دقيق).</p>
+                <h2 class="section-header">العبر والنتائج</h2>
+                <p>انتهت هذه القصة بمجموعة من النتائج التي لا تزال تؤثر في واقعنا اليوم، ومن أهمها استخلاص الدروس من تجارب الماضي.</p>
+            `;
+        }
+
+        function renderArticle() {
+            const article = wikiData[currentArticle];
+            const titleElem = document.getElementById('article-title');
+            const bodyElem = document.getElementById('article-body');
+            
+            if (article) {
+                titleElem.innerText = article.title;
+                bodyElem.innerHTML = article.content;
+            } else {
+                titleElem.innerText = currentArticle.replace(/_/g, ' ');
+                bodyElem.innerHTML = generateSmartContent(currentArticle);
+            }
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function setView(view) {
+            const articleView = document.getElementById('article-view');
+            const editView = document.getElementById('edit-view');
+            const editor = document.getElementById('article-editor');
+
+            if (view === 'edit') {
+                articleView.classList.add('hidden');
+                editView.classList.remove('hidden');
+                editor.value = wikiData[currentArticle]?.content || generateSmartContent(currentArticle);
+            } else {
+                editView.classList.add('hidden');
+                articleView.classList.remove('hidden');
+                renderArticle();
+            }
+        }
+
+        function saveArticle() {
+            const content = document.getElementById('article-editor').value;
+            wikiData[currentArticle] = { 
+                title: currentArticle.replace(/_/g, ' '), 
+                content: content 
+            };
+            setView('read');
+        }
+
+        function handleSearch() {
+            const input = document.getElementById('search-input');
+            const query = input.value.trim().replace(/ /g, '_');
+            if(query) showArticle(query);
+        }
+
+        function showArticle(key) {
+            currentArticle = key;
+            renderArticle();
+            setView('read');
+        }
+
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+
+        window.onload = () => {
+            buildSidebar();
+            renderArticle();
+        };
+    </script>
+</body>
+</html>
